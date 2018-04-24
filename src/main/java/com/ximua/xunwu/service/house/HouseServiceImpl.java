@@ -370,6 +370,22 @@ public class  HouseServiceImpl implements IHouseService {
     }
 
     /**
+     * 根据地图边界查找房源
+     * @param mapSearch
+     * @return
+     */
+    @Override
+    public ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch) {
+        ServiceMultiResult<Long> serviceMultiResult = searchService.mapQuery(mapSearch);
+        if(serviceMultiResult.getTotal() == 0){
+            return new ServiceMultiResult<>(0,new ArrayList<>());
+        }
+
+        List<HouseDTO> houses = wrapperHouseResult(serviceMultiResult.getResult());
+        return new ServiceMultiResult<>(serviceMultiResult.getTotal(),houses);
+    }
+
+    /**
      * 普通查询（非ES查询）
      * @param rentSearch
      * @return

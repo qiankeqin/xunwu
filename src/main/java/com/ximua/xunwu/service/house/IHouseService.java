@@ -45,4 +45,7 @@ public interface IHouseService {
      * @return
      */
     ServiceMultiResult<HouseDTO> wholeMapQuery(MapSearch mapSearch);
+
+    //根据地图边界查找房源
+    ServiceMultiResult<HouseDTO> boundMapQuery(MapSearch mapSearch);
 }

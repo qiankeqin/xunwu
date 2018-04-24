@@ -5,6 +5,7 @@ import com.ximua.xunwu.web.controller.user.ServiceMultiResult;
 import com.ximua.xunwu.web.form.RentSearch;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 检索接口
@@ -56,4 +57,12 @@ public interface ISearchService {
      * @return
      */
     ServiceMultiResult<Long> mapQuery(String cityEnName,String orderBy,String orderDirection,int start,int size);
+
+
+    /**
+     * 精确范围查询
+     * @return
+     */
+    ServiceMultiResult<Long> mapQuery(MapSearch mapSearch);
+
 }

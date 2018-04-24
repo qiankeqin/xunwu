@@ -232,7 +232,15 @@ public class HouseController {
         if(mapSearch.getCityEnName() == null){
             return ApiResponse.ofMessage(HttpStatus.BAD_REQUEST.value(),"必须选择城市");
         }
-        ServiceMultiResult<HouseDTO> serviceMultiResult = houseService.wholeMapQuery(mapSearch);
+        ServiceMultiResult<HouseDTO> serviceMultiResult = null;
+        if(mapSearch.getLevel()<13){
+            //全地图搜索
+            serviceMultiResult = houseService.wholeMapQuery(mapSearch);
+        }else{
+            //小地图查询必须要传递地图边界参数
+            serviceMultiResult = houseService.boundMapQuery(mapSearch);
+        }
+//        ServiceMultiResult<HouseDTO> serviceMultiResult = houseService.wholeMapQuery(mapSearch);
         ApiResponse response = ApiResponse.ofSuccess(serviceMultiResult.getResult());
         response.setMore(serviceMultiResult.getTotal()> (mapSearch.getStart()));
         return response;

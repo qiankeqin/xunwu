@@ -26,6 +26,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -535,6 +536,42 @@ public class SearchServiceImpl implements ISearchService {
                     houseIds.add(Longs.tryParse( String.valueOf(hit.getSource().get(HouseIndexKey.HOUSE_ID))));
                 }
         );
+        return new ServiceMultiResult<>(response.getHits().getTotalHits(),houseIds);
+    }
+
+    /**
+     * 精确范围查询
+     * @param mapSearch
+     * @return
+     */
+    @Override
+    public ServiceMultiResult<Long> mapQuery(MapSearch mapSearch) {
+        //首选限定具体范围
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+        boolQuery.filter(QueryBuilders.termQuery(HouseIndexKey.CITY_EN_NAME,mapSearch.getCityEnName()));
+
+        boolQuery.filter(
+                QueryBuilders.geoBoundingBoxQuery("location")
+                .setCorners(//注意顺序
+                        new GeoPoint(mapSearch.getLeftLatitude(),mapSearch.getLeftLongitude()),//左上角经纬度
+                        new GeoPoint(mapSearch.getRightLatitude(),mapSearch.getRightLongitude())//右下角经纬度
+                )
+        );
+        SearchRequestBuilder builder = this.esClient.prepareSearch(INDEX_NAME)
+                .setTypes(INDEX_TYPE)
+                .setQuery(boolQuery)
+                .addSort(HouseSort.getSortKey(mapSearch.getOrderBy()), SortOrder.fromString(mapSearch.getOrderDirection()))
+                .setFrom(mapSearch.getStart())
+                .setSize(mapSearch.getSize());
+        SearchResponse response = builder.get();
+        List<Long> houseIds = new ArrayList<>();
+        if(RestStatus.OK != response.status()){
+            logger.warn("Search status is not ok for "+builder);
+            return new ServiceMultiResult<>(0,houseIds);
+        }
+        for(SearchHit hit : response.getHits()){
+            houseIds.add(Longs.tryParse(String.valueOf(hit.getSource().get(HouseIndexKey.HOUSE_ID))));
+        }
         return new ServiceMultiResult<>(response.getHits().getTotalHits(),houseIds);
     }
 
